@@ -1,7 +1,9 @@
 from django.urls import path
 
+from registration.views import get_user_with_email
+
 urlpatterns = [
-    url(r'^sign-in/$', 'PriceIT.views.get_user_with_email')
+    path('sign-in/', get_user_with_email)
 
 ]
 
