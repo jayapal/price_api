@@ -1,9 +1,9 @@
 from django.urls import path
 
-from login.views import get_user_with_email
+from login.views import login_user
 
 urlpatterns = [
-    path('login/', get_user_with_email)
+    path('login/', login_user)
 
 ]
 
