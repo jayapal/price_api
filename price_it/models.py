@@ -126,3 +126,57 @@ class Request(models.Model):
             )
             self.image_url = image_url
         super(Request, self).save(*args, **kwargs)
+
+
+class WhitelistedDomain(models.Model):
+
+    CATEGORY_CHOICES = (
+        ('auto', 'Auto'),
+        ('business', 'Business'),
+        ('apparel and accessories', 'Apparel and Accessories'),
+        ('electronics', 'Electronics'),
+        ('department stores', 'Department Stores'),
+        ('entertainment and media', 'Entertainment and Media'),
+        ('baby', 'Baby'),
+        ('family', 'Family'),
+        ('food and drink', 'Food and Drink'),
+        ('toys', 'Toys'),
+        ('gifts & flowers', 'Gifts & Flowers'),
+        ('health & beauty', 'Health & Beauty'),
+        ('home', 'Home'),
+        ('travel', 'Travel'),
+        ('sports & fitness', 'Sports & Fitness'),
+        ('pets', 'Pets'),
+        ('online services', 'Online Services'),
+        ('education', 'Education'),
+    )
+
+    PJ = 'PJ'
+    LS = 'LS'
+    Connexity = 'Connexity'
+    CJ = 'cj'
+    ImpactRadius = 'Impact'
+    ShareASale = 'ShareASale'
+    FlexOffers = 'FlexOffers'
+    Ebay = 'Ebay'
+    Awin = 'Awin'
+    Viglink = 'Viglink'
+
+    NETWORK_CHOICES = (
+        (PJ, PJ),
+        (LS, LS),
+        (Connexity, Connexity),
+        (CJ, CJ),
+        (ImpactRadius, ImpactRadius),
+        (ShareASale, ShareASale),
+        (FlexOffers, FlexOffers),
+        (Ebay, Ebay),
+        (Awin, Awin),
+        (Viglink, Viglink)
+    )
+    PERCENTAGE = "%"
+    FIXED = "$"
+    COMMISSION_CHOICES = (
+        (PERCENTAGE, PERCENTAGE),
+        (FIXED, FIXED)
+    )
