@@ -1,20 +1,11 @@
 import json
 
-from django.conf import settings
-from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from django.views.decorators.cache import cache_page
-from django.shortcuts import (HttpResponse, HttpResponseRedirect,
-                              render, render_to_response)
-
-from Klutterapp.models import Category, UserProfile
-from BrandFavourite.models import BrandNavigation, Brand, ProductsV2
-from notifications.models import UserNotification, NotificationType
-from Subscriptions.models import SubscribedUsers
-
-from rest_framework.decorators import api_view
-from rest_framework.authtoken.models import Token
+from django.shortcuts import get_object_or_404, HttpResponse
 from django.utils.crypto import get_random_string
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view
+
+from users.models import UserProfile
 
 
 @api_view()
@@ -42,14 +33,12 @@ def user_details(request, user_id):
             }
         ]
     """
-    print request.META
-    print request.META.get('HTTP_AUTHORIZATION')
-    from PriceIT.models import Request, UserRequest
+    print(request.META)
+    print(request.META.get('HTTP_AUTHORIZATION'))
     from django.db.models import Sum
-    from BrandFavourite.models import FavouriteV2
+
     user_dict = {}
     user = get_object_or_404(UserProfile, user__id=user_id)
-
 
     #user_favourites = FavouriteV2.objects.filter(user=user.user, is_active=True).count()
 
@@ -61,7 +50,7 @@ def user_details(request, user_id):
         if user.user.groups.filter(name='TESTER').exists():
             user_dict['admin'] = True"""
     if user.user.first_name or user.user.last_name:
-        user_dict['name'] = '%s %s'%(user.user.first_name,user.user.last_name)
+        user_dict['name'] = '%s %s'%(user.user.first_name, user.user.last_name)
     if user.gender:
         user_dict['gender'] = user.gender
     user_dict['email'] = user.user.email
@@ -76,7 +65,7 @@ def user_details(request, user_id):
         user_dict['price_points'] = user.price_points
     user_dict['total_saved'] = 0
     user_dict['priced_it_count'] = 0
-    user_dict['price_points']  = 0
+    user_dict['price_points'] = 0
     user_dict['you_earned_notification'] = False
     """total_saved = Request.objects.filter(request_from=user_id,
                     is_deleted=False).aggregate(Sum('total_saved'))
@@ -131,11 +120,13 @@ def user_details(request, user_id):
         user_dict['priced_it_count'] = 408  
         user_dict['admin'] = False
     user_dict['subscribed'] = SubscribedUsers.objects.filter(user=user.user).exists()"""
-    token,created= Token.objects.get_or_create(user=user.user)
+    token, created = Token.objects.get_or_create(user=user.user)
     user_dict['unread_notifications'] = 0
     user_dict['subscribed'] = False
     user_dict['token'] = token.key
     user_content = []
     user_content.append(user_dict)
-    return HttpResponse(json.dumps(user_content),
-                    content_type="application/json")
+    return HttpResponse(
+        json.dumps(user_content),
+        content_type="application/json"
+    )
