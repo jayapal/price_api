@@ -22,4 +22,6 @@ urlpatterns = [
     path('v2/', include('login.urls')),
     path('get/user/', include('users.urls')),
     path('v2/price/', include('cashback.urls')),
+    path('v2/priceit/', include('cashback.urls')),
+
 ]
