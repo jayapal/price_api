@@ -180,3 +180,49 @@ class WhitelistedDomain(models.Model):
         (PERCENTAGE, PERCENTAGE),
         (FIXED, FIXED)
     )
+
+    network = models.CharField(max_length=10, blank=True, null=True, db_index=True, choices=NETWORK_CHOICES)
+    name = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    name_display = models.CharField("store display name", max_length=255, blank=True, null=True, db_index=True)
+    domain = models.URLField(max_length=255, unique=True, db_index=True)
+    affiliate_url = models.URLField(max_length=500, blank=True, null=True, db_index=True)
+    chrome_extension_enabled = models.BooleanField(default=False)
+    app_enabled = models.BooleanField(default=False)
+    logo = models.ImageField(upload_to='custompic/',
+                             blank=True, null=True)
+    cashback_enabled = models.BooleanField(default=False)
+    visual_search_enabled = models.BooleanField(default=False)
+    under_review = models.BooleanField(default=False)
+    cashback_value = models.FloatField(blank=True, null=True, max_length=20)
+    commission = models.FloatField(blank=True, null=True, max_length=20)
+    commission_type = models.CharField(max_length=10, choices=COMMISSION_CHOICES, blank=True, null=True)
+    cashback_display_name = models.CharField(blank=True, null=True, max_length=252)
+    exclusions = models.CharField(blank=True, null=True, max_length=1024)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    order = models.IntegerField(blank=True, null=True, max_length=20, db_index=True)
+    category = models.CharField(blank=True, null=True, max_length=255,
+                                db_index=True)
+    coupon_enabled = models.BooleanField(default=False)
+    number_of_coupons = models.IntegerField(default=0, max_length=20, db_index=True)
+    enable_extension_affiliate_link = models.BooleanField(default=True)
+    image_square = models.ImageField(upload_to='custompic/', blank=True, null=True)
+    top_level_domain = models.CharField(max_length=255, db_index=True, blank=True, null=True)
+    ebates_enabled = models.BooleanField(default=False)
+    ebates_cashback_value = models.FloatField(blank=True, null=True)
+    ebates_shopping_url = models.CharField(max_length=1000, blank=True, null=True)
+    is_featured = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Whitelisted Domain"
+        verbose_name_plural = "Whitelisted Domains"
+        db_table = 'PriceIT_whitelisteddomain'
+
+
+class PriceappCacheTable(models.Model):
+    cache_key = models.CharField(primary_key=True, max_length=255)
+    value = models.TextField()
+    expires = models.DateTimeField()
+
+    class Meta:
+        db_table = 'priceapp_cache_table'

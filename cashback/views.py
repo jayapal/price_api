@@ -1,5 +1,7 @@
 import json
+from urllib.parse import urlencode, urlparse, parse_qsl, urlunparse
 
+from django.db.models import Count
 from django.conf import settings
 from django.core.cache import caches
 from django.shortcuts import HttpResponse
@@ -11,6 +13,7 @@ from price_it.models import WhitelistedDomain
 CACHES_TIME_SECONDS = settings.CACHES_TIME_SECONDS
 
 cache = caches['bigData']
+
 
 @cache_page(CACHES_TIME_SECONDS)
 def get_category_list(request):
@@ -51,16 +54,16 @@ def get_tracking_affil_url(affiliate_url, network, user_id):
         WhitelistedDomain.Awin: "p1",
         WhitelistedDomain.Viglink: "cuid",
     }
-    params = {id_tags[network]:user_id}
-    url_parts = list(urlparse.urlparse(affiliate_url))
+    params = {id_tags[network]: user_id}
+    url_parts = list(urlparse(affiliate_url))
     # Make the querystrings into the dict
-    query = dict(urlparse.parse_qsl(url_parts[4]))
-	# updating the querystring with the parameters
+    query = dict(parse_qsl(url_parts[4]))
+    # updating the querystring with the parameters
     query.update(params)
     url_parts[4] = urlencode(query)
-    #Appending the updated querystring into the url
-    deep_link = urlparse.urlunparse(url_parts)
-    print "deep_link", deep_link
+    # Appending the updated querystring into the url
+    deep_link = urlunparse(url_parts)
+    print("deep_link", deep_link)
     return deep_link
 
 
@@ -73,16 +76,15 @@ def cash_back_stores_list(request):
     @params sort_by:  aplhabetical/max_cashback/order
     """
     cache_key = generate_cache_key_for_url(url=request.build_absolute_uri(), key_prefix='CASHBACK_STORESV3')
-    if cache.has_key(cache_key):
-        print "CACHED"
-
+    if cache_key in cache:
+        print("CACHED")
         # Yeah we have cached data
         data = cache.get(cache_key)
-        return HttpResponse(data,
-             content_type="application/json")
+        return HttpResponse(data, content_type="application/json")
 
     cash_back_stores = WhitelistedDomain.objects.filter(
-        cashback_enabled=True)
+        cashback_enabled=True
+    )
     sort_by = request.GET.get("sort_by", "").strip().lower()
     user_id = request.GET.get("user_id", "").strip()
     category = request.GET.get("category", "").strip().lower()
@@ -102,32 +104,33 @@ def cash_back_stores_list(request):
         page = int(page) + 1
     except:
         page = ""
-    print ("sort_by", sort_by)
+    print("sort_by", sort_by)
 
     if 'cashback' in sort_by:
-        cash_back_stores  = cash_back_stores.extra(
-            {'cashback_display_int': "CAST(cashback_display_name as UNSIGNED)"})
+        cash_back_stores = cash_back_stores.extra(
+            {'cashback_display_int': "CAST(cashback_display_name as UNSIGNED)"}
+        )
     if featured:
         cash_back_stores = cash_back_stores.filter(is_featured=True)
-        sort_by="order"
+        sort_by = "order"
     # Lets apply order of results
     if sort_by and sort_by == "aplhabetical":
         cash_back_stores = cash_back_stores.order_by("name")
     elif sort_by and sort_by == "max_cashback":
-        print ("sort_by", sort_by)
+        print("sort_by", sort_by)
         cash_back_stores = cash_back_stores.order_by("-commission")
     elif sort_by and sort_by == "min_cashback":
         cash_back_stores = cash_back_stores.order_by("cashback_display_int")
     elif sort_by and sort_by == "order":
         cash_back_stores = cash_back_stores.annotate(
-            null_position=Count('order')).order_by('-null_position',"order")
+            null_position=Count('order')).order_by('-null_position', "order")
     if category:
         # Filter by category
         cash_back_stores = cash_back_stores.filter(category__contains=category)
 
     if retailers:
-        retailers = [ x.strip() for x in retailers.split(",")]
-        print retailers
+        retailers = [x.strip() for x in retailers.split(",")]
+        print(retailers)
         cash_back_stores = cash_back_stores.filter(name__in=retailers)
     total_retailers = cash_back_stores.count()
     if show_by:
@@ -137,8 +140,8 @@ def cash_back_stores_list(request):
                 try:
                     # Slicing data based on page number and show_by count.
                     page = int(page)
-                    current_page = page -1
-                    print (current_page, page)
+                    current_page = page - 1
+                    print(current_page, page)
 
                     start = show_by * (page - 1)
                     end = show_by * page
@@ -152,12 +155,12 @@ def cash_back_stores_list(request):
 
                     cash_back_stores = cash_back_stores[start:end]
                 except Exception as e:
-                    print ("ddddddd", e)
+                    print("ddddddd", e)
                     cash_back_stores = cash_back_stores[:show_by]
             else:
                 cash_back_stores = cash_back_stores[:show_by]
         except Exception as e:
-            print ("eeeeeeeeee", e)
+            print("eeeeeeeeee", e)
             pass
 
     stores_list = []
@@ -192,7 +195,7 @@ def cash_back_stores_list(request):
     pagination = {
         'current_page': current_page,
         'next_page': next_page,
-        'total_page':total_page,
+        'total_page': total_page,
         'total_retailers': total_retailers
     }
     result = {'data': stores_list}
