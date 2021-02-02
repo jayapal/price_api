@@ -4,13 +4,15 @@ from collections import OrderedDict
 
 from django.db.models import Count, Q
 from django.conf import settings
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.http import JsonResponse
 from django.shortcuts import HttpResponse
 
 from brand_favourite.api.cache_delete import generate_cache_key_for_url
 from coupons.models import FmtcCoupon
 from price_it.models import WhitelistedDomain
+
+cache = caches['bigData']
 
 
 def coupon_list(request):
@@ -162,16 +164,18 @@ def coupon_list(request):
 
 def get_coupons(retailer, pdp=False):
     deals_type_mapping = OrderedDict()
-    deals_type_mapping ['Sitewide Sale'] = ['percent', 'coupon', 'dollar', "offer"]
+    deals_type_mapping['Sitewide Sale'] = ['percent', 'coupon', 'dollar', "offer"]
     if not pdp or pdp.lower() == 'false':
-        deals_type_mapping ['Department Sale'] = ['category-sale', 'category-coupon']
-        deals_type_mapping ['Free Shipping'] = ['freeshipping']
-        deals_type_mapping ['Free Gift']= ['gift']
-        deals_type_mapping ['Product Deals'] = ['sale', 'product-coupon','product-sale']
+        deals_type_mapping['Department Sale'] = ['category-sale', 'category-coupon']
+        deals_type_mapping['Free Shipping'] = ['freeshipping']
+        deals_type_mapping['Free Gift'] = ['gift']
+        deals_type_mapping['Product Deals'] = ['sale', 'product-coupon', 'product-sale']
     coupons_list = OrderedDict()
     for k, v in deals_type_mapping.items():
         coupons_list[k] = []
-    coupons = FmtcCoupon.objects.filter(EndDate__gte=datetime.datetime.now().date(), is_active=True, store__name=retailer).annotate(null_position=Count("Rating")).order_by('-null_position', "-Rating")
+    coupons = FmtcCoupon.objects.filter(
+        EndDate__gte=datetime.datetime.now().date(), is_active=True, store__name=retailer
+    ).annotate(null_position=Count("Rating")).order_by('-null_position', "-Rating")
     if pdp and pdp.lower() == 'true':
         coupons = coupons.exclude(Code='')
     for each in coupons:
@@ -180,7 +184,7 @@ def get_coupons(retailer, pdp=False):
             deals_types = eval(each.Types)
         except:
           deals_types = []
-        print each.Types, deals_types
+        print(each.Types, deals_types)
 
         matched_department = None
         for ty in deals_types:
@@ -205,21 +209,23 @@ def get_coupons(retailer, pdp=False):
             coupons_list[matched_department].append(output)
         else:
             coupons_list[matched_department] = [output]
+    # Modified in Python3
+    new_coupons_list = coupons_list.copy()
     for k, v in coupons_list.items():
-        if len(v) == 0 :
-            coupons_list.pop(k)
+        if len(v) == 0:
+            new_coupons_list.pop(k)
     try:
         retailerHandling = eval(coupons[0].store.retailerHandling)
     except:
         retailerHandling = {}
-    result = {'data':coupons_list, 'retailerHandling':retailerHandling}
+    result = {'data': new_coupons_list, 'retailerHandling': retailerHandling}
     return result
 
 
 def coupon_details(request):
     cache_key = generate_cache_key_for_url(url=request.build_absolute_uri(), key_prefix='offers_details')
-    if cache.has_key(cache_key):
-        print "CACHED"
+    if cache_key in cache:
+        print("CACHED")
         # Yeah we have cached data
         data = cache.get(cache_key)
         return JsonResponse(data)
@@ -229,8 +235,7 @@ def coupon_details(request):
     if not retailer and merchant:
         retailer = merchant
     if not retailer:
-        return JsonResponse({'error':"Retailer missing"}, status=400)
+        return JsonResponse({'error': "Retailer missing"}, status=400)
     result = get_coupons(retailer, pdp)
     cache.set(cache_key, result, 604800)
-
     return JsonResponse(result)
