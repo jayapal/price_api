@@ -1,25 +1,15 @@
-from PriceIT.models import WhitelistedDomain
-from django.db.models import Q
-from core.utils import get_top_level_domain_from_url
-from BrandFavourite.models import Stores
-from django.conf import settings
-from django.shortcuts import HttpResponse
-from django.db.models import Count
-from django.views.decorators.cache import cache_page
-import json
-from BrandFavourite.api.cache_delete import generate_cache_key_for_url
-from coupons.models import Coupon, CashbackTransaction
-from django.core.cache import cache
-from django.core.cache import caches
-
-cache = caches['bigData']
-from coupons.models import FmtcCoupon
-from django.db.models import Count
-from core.utils import get_top_level_domain_from_url
-from django.http import JsonResponse
-from collections import OrderedDict
-from Klutterapp.models import UserProfile
 import datetime
+import json
+from collections import OrderedDict
+
+from django.db.models import Count, Q
+from django.conf import settings
+from django.core.cache import cache
+from django.shortcuts import HttpResponse
+
+from brand_favourite.api.cache_delete import generate_cache_key_for_url
+from coupons.models import FmtcCoupon
+from price_it.models import WhitelistedDomain
 
 
 def coupon_list(request):
@@ -31,17 +21,15 @@ def coupon_list(request):
     @params sort_by:  aplhabetical/max_cashback/order
     """
     cache_key = generate_cache_key_for_url(url=request.build_absolute_uri(), key_prefix='offers_list')
-    if cache.has_key(cache_key):
-        print
-        "CACHED"
-
+    if cache_key in cache:
+        print("CACHED")
         # Yeah we have cached data
         data = cache.get(cache_key)
-        return HttpResponse(data,
-                            content_type="application/json")
+        return HttpResponse(data, content_type="application/json")
 
     cash_back_stores = WhitelistedDomain.objects.filter(
-        coupon_enabled=True, number_of_coupons__gt=0)
+        coupon_enabled=True, number_of_coupons__gt=0
+    )
     sort_by = request.GET.get("sort_by", "").strip().lower()
     category = request.GET.get("category", "").strip().lower()
     show_by = request.GET.get("show_by", "").strip().lower()
@@ -64,7 +52,8 @@ def coupon_list(request):
 
     if 'cashback' in sort_by:
         cash_back_stores = cash_back_stores.extra(
-            {'cashback_display_int': "CAST(cashback_display_name as UNSIGNED)"})
+            {'cashback_display_int': "CAST(cashback_display_name as UNSIGNED)"}
+        )
 
     # Lets apply order of results
     if sort_by and sort_by == "aplhabetical":
@@ -81,8 +70,7 @@ def coupon_list(request):
         cash_back_stores = cash_back_stores.filter(category__contains=category)
     if retailers:
         retailers = [x.strip() for x in retailers.split(",")]
-        print
-        retailers
+        print(retailers)
         cash_back_stores = cash_back_stores.filter(name__in=retailers)
     total_retailers = cash_back_stores.count()
     if show_by:
@@ -96,8 +84,7 @@ def coupon_list(request):
                     print(current_page, page)
                     start = show_by * (page - 1)
                     end = show_by * page
-                    print
-                    "end", end, "total_retailers", total_retailers
+                    print("end", end, "total_retailers", total_retailers)
                     total_page = int(round(total_retailers / show_by) + 1)
                     if end > total_retailers:
                         next_page = None
@@ -114,8 +101,7 @@ def coupon_list(request):
             pass
     stores_list = OrderedDict()
     for supported in cash_back_stores:
-        print
-        supported.name
+        print(supported.name)
         store_logo = ""
         image_square = ""
         if supported.logo:
@@ -132,8 +118,9 @@ def coupon_list(request):
             'number_of_offers': supported.number_of_coupons,
             'retailer_logo_square': image_square
         }
-        coupons = FmtcCoupon.objects.filter(EndDate__gte=datetime.datetime.now().date(), is_active=True,
-                                            store__name=supported.name).annotate(
+        coupons = FmtcCoupon.objects.filter(
+            EndDate__gte=datetime.datetime.now().date(), is_active=True, store__name=supported.name
+        ).annotate(
             null_position=Count("Rating")).order_by('-null_position', "Rating")
         if pdp and pdp.lower() == 'true':
             coupons = coupons.exclude(Code='')

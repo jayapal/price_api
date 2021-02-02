@@ -42,7 +42,7 @@ class FmtcCoupon(models.Model):
     LinkID = models.CharField(max_length=500, blank=True, null=True)
     Local = models.CharField(max_length=500, blank=True, null=True)
     #Custom Field
-    store = models.ForeignKey(Stores)
+    store = models.ForeignKey(Stores, on_delete=models.CASCADE)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
