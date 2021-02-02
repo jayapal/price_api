@@ -1,8 +1,9 @@
 from django.urls import path
 
-from coupons.views import coupon_list
+from coupons.views import coupon_list, coupon_details
 
 urlpatterns = [
-    path('list/', coupon_list)
+    path('list/', coupon_list),
+    path('detail/', coupon_details)
 
 ]

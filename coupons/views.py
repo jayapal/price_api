@@ -5,6 +5,7 @@ from collections import OrderedDict
 from django.db.models import Count, Q
 from django.conf import settings
 from django.core.cache import cache
+from django.http import JsonResponse
 from django.shortcuts import HttpResponse
 
 from brand_favourite.api.cache_delete import generate_cache_key_for_url
@@ -157,3 +158,79 @@ def coupon_list(request):
     result = json.dumps(result)
     cache.set(cache_key, result, 604800)
     return HttpResponse(result, content_type="application/json")
+
+
+def get_coupons(retailer, pdp=False):
+    deals_type_mapping = OrderedDict()
+    deals_type_mapping ['Sitewide Sale'] = ['percent', 'coupon', 'dollar', "offer"]
+    if not pdp or pdp.lower() == 'false':
+        deals_type_mapping ['Department Sale'] = ['category-sale', 'category-coupon']
+        deals_type_mapping ['Free Shipping'] = ['freeshipping']
+        deals_type_mapping ['Free Gift']= ['gift']
+        deals_type_mapping ['Product Deals'] = ['sale', 'product-coupon','product-sale']
+    coupons_list = OrderedDict()
+    for k, v in deals_type_mapping.items():
+        coupons_list[k] = []
+    coupons = FmtcCoupon.objects.filter(EndDate__gte=datetime.datetime.now().date(), is_active=True, store__name=retailer).annotate(null_position=Count("Rating")).order_by('-null_position', "-Rating")
+    if pdp and pdp.lower() == 'true':
+        coupons = coupons.exclude(Code='')
+    for each in coupons:
+        output = {}
+        try:
+            deals_types = eval(each.Types)
+        except:
+          deals_types = []
+        print each.Types, deals_types
+
+        matched_department = None
+        for ty in deals_types:
+            for k, v in deals_type_mapping.items():
+                if str(ty).lower() in v:
+                     matched_department = k
+                     output["matched_deal_type"] = ty
+                     break
+            if matched_department:
+                break
+        if not matched_department:
+            continue
+        output["offer_url"] = each.AffiliateURL
+        output["offer_id"] = each.CouponID
+        output["offer_rating"] = each.Rating
+        output["offer_label"] = each.Label
+        output["offer_code"] = each.Code
+        output["offer_types"] = eval(each.Types)
+        output["offer_expires_at"] = str(each.EndDate)
+        output["matched_department"] = matched_department
+        if matched_department in coupons_list.keys():
+            coupons_list[matched_department].append(output)
+        else:
+            coupons_list[matched_department] = [output]
+    for k, v in coupons_list.items():
+        if len(v) == 0 :
+            coupons_list.pop(k)
+    try:
+        retailerHandling = eval(coupons[0].store.retailerHandling)
+    except:
+        retailerHandling = {}
+    result = {'data':coupons_list, 'retailerHandling':retailerHandling}
+    return result
+
+
+def coupon_details(request):
+    cache_key = generate_cache_key_for_url(url=request.build_absolute_uri(), key_prefix='offers_details')
+    if cache.has_key(cache_key):
+        print "CACHED"
+        # Yeah we have cached data
+        data = cache.get(cache_key)
+        return JsonResponse(data)
+    retailer = request.GET.get("retailer", '')
+    merchant = request.GET.get("merchant", '')
+    pdp = request.GET.get("pdp", '')
+    if not retailer and merchant:
+        retailer = merchant
+    if not retailer:
+        return JsonResponse({'error':"Retailer missing"}, status=400)
+    result = get_coupons(retailer, pdp)
+    cache.set(cache_key, result, 604800)
+
+    return JsonResponse(result)
