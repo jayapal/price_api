@@ -4,11 +4,14 @@ from urllib.parse import urlencode, urlparse, parse_qsl, urlunparse
 from django.db.models import Count
 from django.conf import settings
 from django.core.cache import caches
+from django.http import JsonResponse
 from django.shortcuts import HttpResponse
 from django.views.decorators.cache import cache_page
 
 from brand_favourite.api.cache_delete import generate_cache_key_for_url
+from cashback.models import CashbackTransaction
 from price_it.models import WhitelistedDomain
+from users.models import UserProfile
 
 CACHES_TIME_SECONDS = settings.CACHES_TIME_SECONDS
 
@@ -203,3 +206,40 @@ def cash_back_stores_list(request):
     result = json.dumps(result)
     cache.set(cache_key, result, 604800)
     return HttpResponse(result, content_type="application/json")
+
+
+def cashback_list(request):
+    user_id = request.GET.get('user_id')
+    pending = []
+    completed = []
+    your_cashback_balance = 0
+    your_next_payout = 0
+    try:
+        usr_prf = UserProfile.objects.get(user__id=user_id)
+        your_cashback_balance = usr_prf.your_cashback_balance
+        your_next_payout = usr_prf.your_next_payout
+    except Exception as e:
+        pass
+    if not your_cashback_balance:
+        your_cashback_balance = 0
+    if user_id:
+        for each in CashbackTransaction.objects.filter(user_id=user_id).order_by("purchased_on"):
+            if each.status == CashbackTransaction.PENDING:
+                pending.append(
+                    {'card_number': each.card_number, 'merchant': each.retailer,
+                     'transaction_id': each.transaction_id,
+                     'date': each.purchased_on.strftime("%m/%d/%Y"), 'cashback': each.commission_earned,
+                     'productUrl': each.productUrl, 'salePrice': each.salePrice})
+            if each.status == CashbackTransaction.APPROVED:
+                completed.append(
+                    {'card_number': each.card_number, 'merchant': each.retailer,
+                     'transaction_id': each.transaction_id,
+                     'date': each.purchased_on.strftime("%m/%d/%Y"), 'cashback': each.commission_earned,
+                     'productUrl': each.productUrl, 'salePrice': each.salePrice})
+
+    data = {'pending_transactions': pending, 'completed_transactions': completed,
+            'your_cashback_balance': your_cashback_balance,
+            'your_card_last_four_digit': None,
+            'your_next_payout': your_next_payout}
+    result = {'cashback_data': data}
+    return JsonResponse(result)
