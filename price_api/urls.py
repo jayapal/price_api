@@ -23,6 +23,6 @@ urlpatterns = [
     path('get/user/', include('users.urls')),
     path('v2/price/', include('cashback.urls')),
     path('v2/priceit/', include('cashback.urls')),
-    path('api/cashback/', include('cashback.urls')),
+    path('api/coupons/', include('coupons.urls')),
 
 ]
