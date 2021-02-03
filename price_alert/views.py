@@ -82,10 +82,10 @@ def alert_list(request):
 def get_email_content(instance):
     try:
         api_url = "https://matchos.price.com/apiv2/match_recommend?partner=5b960a4ade2962062eeb1f4a&url={}".format(
-            urllib.quote(instance.product_url)
+            urllib.parse.quote(instance.product_url)
         )
         data = requests.get(api_url).json()[0]
-        print api_url
+        print(api_url)
     except Exception as e:
         data = {}
     count_stats = {}
@@ -108,10 +108,12 @@ def get_email_content(instance):
     except:
         result["you_save"] = None
 
-    print ("result", result)
+    print("result", result)
     # get title, image_url
     try:
-        api_url = "https://matchos.price.com/apiv2/item?partner=5b960a4ade2962062eeb1f4a&url={}".format(urllib.quote(instance.product_url))
+        api_url = "https://matchos.price.com/apiv2/item?partner=5b960a4ade2962062eeb1f4a&url={}".format(
+            urllib.parse.quote(instance.product_url)
+        )
         data = requests.get(api_url).json()[0]
     except Exception as e:
         data = []
@@ -143,10 +145,10 @@ def mark_as_inactive(request):
     except Exception as e:
         message = "Invalid Price"
     if not notified_price:
-        return JsonResponse({'updated':updated, 'message':"notified_price missing"}, status=400)
+        return JsonResponse({'updated': updated, 'message': "notified_price missing"}, status=400)
     if not message and instance:
         if instance.active:
-            instance.active=False
+            instance.active = False
             instance.notified_price = notified_price
             instance.notified_timestamp = datetime.datetime.now()
             result = get_email_content(instance)
@@ -169,4 +171,4 @@ def mark_as_inactive(request):
 
         else:
             message = "Already marked as Inactive"
-    return JsonResponse({'updated':updated, 'message':message}, status=200)
+    return JsonResponse({'updated': updated, 'message': message}, status=200)
