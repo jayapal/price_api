@@ -13,7 +13,7 @@ class Alert(models.Model):
     sku = models.CharField(max_length=200, db_index=True, blank=True, null=True)
     vendor_name = models.CharField(max_length=200, blank=True, null=True)
     price_alert = models.FloatField(max_length=20, validators=[MinValueValidator(0.1)])
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     active = models.BooleanField(default=True, db_index=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)

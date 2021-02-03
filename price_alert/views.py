@@ -1,19 +1,8 @@
-from django.shortcuts import render
 from django.http import JsonResponse
-from PriceAlert.models import Alert
-from django.http import JsonResponse, HttpResponse
-from django.views.generic.edit import CreateView
-from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-from django.utils.decorators import method_decorator
-import json, requests, urllib, datetime
-from django.core import serializers
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
 from django.forms import ModelForm
-from django.template.loader import render_to_string
-from django.core.mail import EmailMessage
+from django.views.decorators.csrf import csrf_exempt
+
+from price_alert.models import Alert
 
 
 class AlertForm(ModelForm):
