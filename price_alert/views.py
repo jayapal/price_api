@@ -46,3 +46,30 @@ def alert_create(request):
     except Exception as e:
         result = {'error': {'unique_together': "Duplicate entry"}}
         return JsonResponse(result, status=400)
+
+
+def alert_list(request):
+    try:
+        user_id = int(request.GET.get('user_id'))
+    except Exception as e:
+        message = "Invalid User"
+        return JsonResponse({'alerts':[], 'message':message}, status=200)
+
+    qs = Alert.objects.filter(user__id=user_id)
+    data = []
+    for each in qs:
+        row = {}
+        row["object_id"] = each.object_id
+        row["user_id"] = each.user.id
+        row["product_url"] = each.product_url
+        row["sku"] = each.sku
+        row["vendor_name"] = each.vendor_name
+        row["price_alert"] = each.price_alert
+        row["active"] = each.active
+        row["created_on"] = each.created_on
+        row["updated_on"] = each.updated_on
+        row["notified_timestamp"] = each.notified_timestamp
+        row["notified_price"] = each.notified_price
+        row["current_offer_price"] = each.current_offer_price
+        data.append(row)
+    return JsonResponse({'alerts':data}, status=200)
