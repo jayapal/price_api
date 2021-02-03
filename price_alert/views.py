@@ -53,7 +53,7 @@ def alert_list(request):
         user_id = int(request.GET.get('user_id'))
     except Exception as e:
         message = "Invalid User"
-        return JsonResponse({'alerts':[], 'message':message}, status=200)
+        return JsonResponse({'alerts': [], 'message': message}, status=200)
 
     qs = Alert.objects.filter(user__id=user_id)
     data = []
@@ -72,4 +72,4 @@ def alert_list(request):
         row["notified_price"] = each.notified_price
         row["current_offer_price"] = each.current_offer_price
         data.append(row)
-    return JsonResponse({'alerts':data}, status=200)
+    return JsonResponse({'alerts': data}, status=200)
