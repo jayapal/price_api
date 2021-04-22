@@ -195,3 +195,21 @@ def alert_delete(request):
         return JsonResponse({'deleted':False, 'message':message}, status=200)
     return JsonResponse({'deleted':True, 'message':'Alert has been deleted'}, status=200)
 
+
+def alert_status(request):
+    try:
+        print (request.POST)
+        object_id = request.GET.get('object_id')
+        user_id = int(request.GET.get('user_id'))
+    except Exception as e:
+        message = "Invalid object_id/user_id"
+        return JsonResponse({'deleted':False, 'message':str(e)}, status=200)
+
+    try:
+        instance = Alert.objects.get(object_id=object_id, user_id=user_id, active=True)
+        return JsonResponse({'exist':True, 'message':'Object_id Active','price_alert':instance.price_alert}, status=200)
+    except Exception as e:
+        message = str(e)
+        return JsonResponse({'exist':False, 'message':message}, status=200)
+    return JsonResponse({'exist':False, 'message':'Object_id Not found'}, status=200)
+
