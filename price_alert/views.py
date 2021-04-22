@@ -90,13 +90,14 @@ def get_email_content(instance):
         data = {}
     count_stats = {}
     for each in data.get("matches", []):
-        if each["skuCondition"]+"_count" not in count_stats.keys():
-            count_stats[each["skuCondition"]+"_count"] = 1
-            count_stats[each["skuCondition"]+"_lowest_price"] = each["salePrice"]
-        else:
-            count_stats[each["skuCondition"]+"_count"] += 1
-            if each["salePrice"] < count_stats[each["skuCondition"]+"_lowest_price"]:
+        if each["skuCondition"]:
+            if each["skuCondition"]+"_count" not in count_stats.keys():
+                count_stats[each["skuCondition"]+"_count"] = 1
                 count_stats[each["skuCondition"]+"_lowest_price"] = each["salePrice"]
+            else:
+                count_stats[each["skuCondition"]+"_count"] += 1
+                if each["salePrice"] < count_stats[each["skuCondition"]+"_lowest_price"]:
+                    count_stats[each["skuCondition"]+"_lowest_price"] = each["salePrice"]
     result = {}
     result['Count'] = count_stats
     result["current_price"] = data.get("recommendation", {}).get("salePrice")
