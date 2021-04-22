@@ -1,0 +1,65 @@
+import urllib
+import uuid
+import base64
+import boto
+import binascii
+import requests
+
+from django.conf import settings
+from django.http import JsonResponse
+from core.cloudsight.image_metadata import get_image_metadata, get_image_metadata_from_file
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def get_image_details(request):
+    """
+    API to fetch image metadata from image url.
+    """
+    url = ''
+    cropped_image = ''
+
+    if request.method == "GET":
+        url = request.GET.get('url', '')
+        if not url:
+            return JsonResponse({'error': 'Please pass a url'})
+    elif request.method == "POST":
+        cropped_image = str(request.POST.get('cropped_image', '')).strip()
+        if not cropped_image:
+            return JsonResponse({'error': 'Please pass a cropped_image'})
+    else:
+        return JsonResponse({'error': 'Invalid request'})
+
+    if cropped_image:
+        # Converting base64 to image.
+        encoded_image = cropped_image.split(',')[-1]
+        imgdata = ''
+        try:
+            imgdata = base64.standard_b64decode(encoded_image)
+        except Exception, err:
+            # Incase of encoding error.
+            image_details = {}
+            image_details['success'] = False
+            image_details['message'] = str(err.message)
+        if imgdata:
+            image_details = get_image_metadata_from_file(imgdata)
+        '''# Sending base64 to get image url
+        response = convert_base64_to_image(cropped_image)
+        # Checking for success.
+        if not response['success']:
+            # Returning error message.
+            return JsonResponse(response)
+        # On success extracting url.
+        url = response['url']'''
+    if url:
+        img_url = url.strip()
+        img_url =  urllib.unquote(urllib.unquote(img_url))
+        print "img_url", img_url
+        imgdata = get_image_data_from_url(img_url)
+        image_details = {}
+        if imgdata:
+            image_details = get_image_metadata_from_file(imgdata)
+
+        #image_details = get_image_metadata(img_url)
+    return JsonResponse(image_details)
+

@@ -25,5 +25,6 @@ urlpatterns = [
     path('v2/priceit/', include('cashback.urls')),
     path('api/coupons/', include('coupons.urls')),
     path('api/alerts/', include('price_alert.urls')),
+    path('v2/price/', include('price_it.api.urls')),
 
 ]
