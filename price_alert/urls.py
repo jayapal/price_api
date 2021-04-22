@@ -7,5 +7,5 @@ urlpatterns = [
     path('list/', views.alert_list),
     path('mark_as_inactive/', views.mark_as_inactive),
     path('delete/', views.alert_delete, name='delete'),
-    url(r'^status/$', alert_status, name='status'),
+    path('status/', views.alert_status, name='status'),
 ]
