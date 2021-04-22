@@ -173,3 +173,25 @@ def mark_as_inactive(request):
         else:
             message = "Already marked as Inactive"
     return JsonResponse({'updated': updated, 'message': message}, status=200)
+
+
+@csrf_exempt
+def alert_delete(request):
+    if request.method == "GET":
+        return JsonResponse({'deleted':False, 'message':'GET method not allowed'}, status=405)
+    try:
+        object_id = request.POST.get('object_id')
+        user_id = int(request.POST.get('user_id'))        
+    except Exception as e:
+        message = "Invalid object_id/user_id"
+        return JsonResponse({'deleted':False, 'message':message}, status=200)
+
+    try:
+        instance = Alert.objects.get(object_id=object_id, user_id=user_id, active=True)
+        instance.active = False
+        instance.save()
+    except Exception as e:
+        message = str(e)
+        return JsonResponse({'deleted':False, 'message':message}, status=200)
+    return JsonResponse({'deleted':True, 'message':'Alert has been deleted'}, status=200)
+
