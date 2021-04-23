@@ -7,9 +7,10 @@ import requests
 
 from django.conf import settings
 from django.http import JsonResponse
-from core.cloudsight.image_metadata import get_image_metadata, get_image_metadata_from_file
+from core.cloudsight.image_metadata import get_image_metadata_from_file
 
 from django.views.decorators.csrf import csrf_exempt
+
 
 @csrf_exempt
 def get_image_details(request):
@@ -63,3 +64,12 @@ def get_image_details(request):
         #image_details = get_image_metadata(img_url)
     return JsonResponse(image_details)
 
+
+def get_image_data_from_url(url):
+    try:
+        response = requests.get(url, timeout=10)
+        content = response.content
+    except Exception, e:
+        print "E", e
+        content = ''
+    return content
