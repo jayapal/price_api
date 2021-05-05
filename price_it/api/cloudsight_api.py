@@ -1,15 +1,12 @@
 import urllib
-import uuid
 import base64
-import boto
-import binascii
 import requests
 
-from django.conf import settings
 from django.http import JsonResponse
 from core.cloudsight.image_metadata import get_image_metadata_from_file
 
 from django.views.decorators.csrf import csrf_exempt
+
 
 @csrf_exempt
 def get_image_details(request):
@@ -42,7 +39,7 @@ def get_image_details(request):
             print("encodingGG")
             image_details = {}
             image_details['success'] = False
-            image_details['message'] = str(err.message)
+            image_details['message'] = str(err)
         if imgdata:
             image_details = get_image_metadata_from_file(imgdata)
         '''# Sending base64 to get image url
@@ -55,8 +52,8 @@ def get_image_details(request):
         url = response['url']'''
     if url:
         img_url = url.strip()
-        img_url =  urllib.unquote(urllib.unquote(img_url))
-        print "img_url", img_url
+        img_url = urllib.parse.unquote(urllib.parse.unquote(img_url))
+        print("img_url", img_url)
         imgdata = get_image_data_from_url(img_url)
         image_details = {}
         if imgdata:
@@ -70,7 +67,7 @@ def get_image_data_from_url(url):
     try:
         response = requests.get(url, timeout=10)
         content = response.content
-    except Exception, e:
-        print "E", e
+    except Exception as e:
+        print("E", e)
         content = ''
     return content
