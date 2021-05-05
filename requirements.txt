@@ -1,3 +1,4 @@
+boto==2.49.0
 Django==3.1.5
 djangorestframework==3.12.2
 django-ses==2.0.0

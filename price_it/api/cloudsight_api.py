@@ -11,7 +11,6 @@ from core.cloudsight.image_metadata import get_image_metadata_from_file
 
 from django.views.decorators.csrf import csrf_exempt
 
-
 @csrf_exempt
 def get_image_details(request):
     """
@@ -36,9 +35,11 @@ def get_image_details(request):
         encoded_image = cropped_image.split(',')[-1]
         imgdata = ''
         try:
+            print("shoooo")
             imgdata = base64.standard_b64decode(encoded_image)
-        except Exception, err:
+        except Exception as err:
             # Incase of encoding error.
+            print("encodingGG")
             image_details = {}
             image_details['success'] = False
             image_details['message'] = str(err.message)

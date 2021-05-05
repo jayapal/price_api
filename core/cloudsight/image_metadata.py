@@ -12,7 +12,7 @@ def get_image_metadata_from_file(imagedata):
         url = 'https://matchos.price.com/apiv2/visualsearch'
         params = {'partner': '5ee01047b94463669b196af5', "format": "raw"}# "Content-Type": "application/x-binary"}
         resp = requests.post(url, params=params, data=imagedata)
-    except Exception, e:
+    except Exception as e:
         return {'error': str(e)}
     return resp.json()
 
