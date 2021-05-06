@@ -63,6 +63,27 @@ def get_image_details(request):
     return JsonResponse(image_details)
 
 
+def get_image_url_details(url):
+    """API to fetch image details from image url.
+    """
+    if not url:
+        return ''
+    img_url = url.strip()
+    img_url =  urllib.unquote(urllib.unquote(img_url))
+    print "img_url", img_url
+    imgdata = get_image_data_from_url(img_url)
+    image_details = {}
+
+    if imgdata:
+        image_details = get_image_metadata_from_file(imgdata)
+
+    if image_details:
+        if str(image_details.get('status', '')) == 'completed':
+            return str(image_details.get('name', ''))
+
+    return image_details
+
+
 def get_image_data_from_url(url):
     try:
         response = requests.get(url, timeout=10)

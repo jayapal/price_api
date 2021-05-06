@@ -1,6 +1,6 @@
 from django.db import models
 
-from brand_favourite.models import Stores
+from brand_favourite.models import Stores, Source
 
 
 class FmtcCoupon(models.Model):
@@ -46,3 +46,32 @@ class FmtcCoupon(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+
+
+class Coupon(models.Model):
+    TYPE_CHOICES = (
+        ('subscription', 'subscription'),
+        ('revshare', 'revshare'),
+    )
+
+    name = models.CharField(max_length=100)
+    store = models.ForeignKey(Stores)
+    source = models.ForeignKey(Source)
+    code = models.CharField(max_length=100, db_index=True, blank=True, null=True)
+    description = models.CharField(max_length=750, blank=True, null= True)
+    network_label = models.CharField(max_length=100, db_index=True, blank=True, null=True)
+    code_url = models.URLField(max_length=1000, blank=True, null=True)
+    location_url = models.URLField(max_length=1000, blank=True, null=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField(blank=True, null= True)
+    valid = models.BooleanField(default=True)
+    #rank = models.IntegerField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)
+    coupon_id = models.IntegerField(db_index=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True, db_index=True)
+    token_type = models.CharField(null=True, blank=True, max_length=50,
+        choices=TYPE_CHOICES)
+
+    class Meta:
+        unique_together = (('source', 'coupon_id'),)

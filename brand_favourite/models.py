@@ -265,3 +265,50 @@ class ProductsV2(models.Model):
         verbose_name = "Product"
         verbose_name_plural = "Products"
         db_table = 'BrandFavourite_productsv2'
+
+
+class Source(models.Model):
+    SOURCE_CHOICES = (
+        ('manual', 'manual'),
+        ('script', 'script'),
+        ('price-it', 'price-it'),
+        ('pepperjam','pepperjam'),
+        ('cj','cj'),
+        ('linkshare','linkshare'),
+        ('facebook_bot','facebook_bot'),
+        ('coupilia','coupilia'),
+        ('fmtc','fmtc')
+
+
+    )
+    TYPE_CHOICES = (
+        ('extension', 'extension'),
+        ('API', 'API'),
+        ('spreadsheet', 'spreadsheet'),
+        ('facebook_bot','facebook_bot')
+    )
+    source = models.CharField(unique=True, max_length=100, choices=SOURCE_CHOICES)
+    source_type = models.CharField(null=True, blank=True, max_length=100, choices=TYPE_CHOICES)
+
+    def __unicode__(self):
+        return self.source
+
+class ProductsV2Stats(models.Model):
+    PROCESSING = 0
+    COMPLETED = 1
+    STATUS_TYPE_OPTIONS = (
+        (PROCESSING, 'in_progress'),
+        (COMPLETED, 'completed'),
+    )
+    product = models.ForeignKey(ProductsV2, db_index=True)
+    min_price = models.FloatField(max_length=20, blank=True, null=True, db_index=True)
+    max_price = models.FloatField(max_length=20, blank=True, null=True, db_index=True)
+    avg_price = models.FloatField(max_length=20, blank=True, null=True, db_index=True)
+    source = models.IntegerField(choices=settings.PRODUCT_SOURCE, blank=True,
+        null=True, db_index=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    status = models.IntegerField(choices=STATUS_TYPE_OPTIONS, default=PROCESSING)
+
+    def __unicode__(self):
+       return self.product.title
